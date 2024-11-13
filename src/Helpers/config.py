@@ -8,8 +8,7 @@ class Settings(BaseSettings):
      Class to validate data inherits from Pydantic BaseSetting
      """
      APP_NAME : str
-     APP_VERSION :str
-     API_KEY : str
+     GOOGLE_API_KEY : str
      FILE_ALLOWED_TYPES :list
      FILE_SIZE_LIMIT:int
 
