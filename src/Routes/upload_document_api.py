@@ -1,7 +1,7 @@
 import os
 from fastapi import APIRouter,UploadFile,File,HTTPException
 from Services.document_service import DocumentService
-from Helpers.Enums.response import ResponseStatus, ResponseMessage,ErrorType
+from Helpers.Enums.Response import ResponseStatus, ResponseMessage,ErrorType
 from pydantic import BaseModel
 
 document_upload_router = APIRouter()
@@ -26,6 +26,11 @@ async def upload_document(file:UploadFile = File(...)):
         raise HTTPException(status_code=400,detail="Only Text inputs and PDFs are allowed") 
     
     try:
+        # By encoding content
+        # file_content = await file.read()  # Read file content
+        # response = await document_service.process_document(file.filename, file_content)
+
+        # By reading file path
         file_path = os.path.join(UPLOAD_DIR, file.filename)
         with open(file_path, "wb") as f:
             content = await file.read()
