@@ -11,6 +11,7 @@ class Settings(BaseSettings):
      GOOGLE_API_KEY : str
      FILE_ALLOWED_TYPES :list
      FILE_SIZE_LIMIT:int
+     FAST_API_URL:str
 
      class Config:
         """
