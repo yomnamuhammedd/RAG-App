@@ -1,14 +1,14 @@
 import streamlit as st
 import requests
-import random
 import mimetypes
 import time
 from dotenv import load_dotenv
+from src.Helpers.config import get_settings,Settings
 import os
 
-# Load environment variables
-load_dotenv()
-FAST_API_URL="http://127.0.0.1:8000"
+app_settings = get_settings()
+FAST_API_URL=app_settings.FAST_API_URL
+print(f"Fast API URL {FAST_API_URL}")
 
 # Function to stream chatbot responses
 def response_generator(bot_message):
@@ -20,7 +20,7 @@ def response_generator(bot_message):
 st.sidebar.title("Choose an Action")
 app_mode = st.sidebar.selectbox("Select Mode", ["Upload Document", "Chat with Chatbot"])
 
-# Initialize session state for chat messages
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -68,7 +68,6 @@ elif app_mode == "Chat with Chatbot":
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # Request chatbot response
         response = requests.post(FAST_API_URL+'/chat', json={"question": prompt})
         
         # Handle response
@@ -82,4 +81,4 @@ elif app_mode == "Chat with Chatbot":
             st.session_state.messages.append({"role": "assistant", "content": chatbot_response})
         else:
             st.error("Failed to get a response from the chatbot.")
-            st.write("Error:", response.json().get("error", "Unknown error"))
+            # st.write("Error:", response.json().get("error", "Unknown error"))
