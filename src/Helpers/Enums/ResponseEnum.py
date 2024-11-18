@@ -19,6 +19,9 @@ class Response(Enum):
     DATA_STORED_FAILED = "text_stored_failed"
     TEXT_ID_ALREADY_EXISTS = "this_id_already_exists_in_vectordatabase"
 
+    CHAT_BOT_RESPONSE_SUCCESS="chat_bot_responded_sucessfully"
+    CHAT_BOT_RESPONSE_FAILED="chat_bot_responded_failed"
+
 class ResponseStatus(str, Enum):
     SUCCESS = "success"
     ERROR = "error"
