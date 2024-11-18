@@ -12,4 +12,4 @@ app.include_router(chat_api.chat_api_router)
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome Slash Chatbot"}
+    return {"message": "Welcome to Slash Chatbot"}
