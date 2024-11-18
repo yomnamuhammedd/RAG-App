@@ -1,4 +1,3 @@
-import os
 import io
 import PyPDF2
 from typing import List
@@ -10,16 +9,21 @@ from langchain_core.documents import Document
 from src.VectorDB.ChromVDB import ChromaVectorDatabase
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from .service_interface import ServiceInterface
-# from langchain_ai21 import AI21SemanticTextSplitter
 
 load_dotenv()
 @asyncinit
 class DocumentService(ServiceInterface):
     async def __init__(self):
         await super().__init__()
-        self.__vector_database = await ChromaVectorDatabase.get_instance()
-        self.__text_splitter = None
+        self.__collection = await ChromaVectorDatabase.get_instance()
         self.size_scale = 1048576
+        self.__text_splitter =  RecursiveCharacterTextSplitter(
+            chunk_size=1500,
+            chunk_overlap=650,
+            length_function=len,
+            is_separator_regex=True
+            )
+       
         # self.semantic_text_splitter_chunks = AI21SemanticTextSplitter(chunk_size=1000)
 
     async def validate_uploaded_file(self,file:UploadFile):
@@ -60,30 +64,56 @@ class DocumentService(ServiceInterface):
                 text += page.extract_text() + "\n"
         return text
     
-    async def split_text(self, text: str, chunk_size: int = 512) -> List[str]:
-        self.__text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=chunk_size,
-            chunk_overlap=100,
-            length_function=len,
-            is_separator_regex=True
-            )
-        
+    async def split_text(self, text: str, chunk_size: int = 512) -> List[str]:    
         texts = self.__text_splitter.split_text(text)
         return texts
     
     async def split_pdf(self, text: str, chunk_size: int = 1500) -> List[Document]:
-        self.__text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=chunk_size,
-            chunk_overlap=500,
-            length_function=len,
-            is_separator_regex=True
-            )
-        
         docs = self.__text_splitter.create_documents([text])
         splitted_docs = self.__text_splitter.split_documents(docs)
 
         return splitted_docs
     
+    async def insert_text_to_vector_db(self,text:str):
+            """
+            Insert text data into the Chroma vector database.
+            Args:
+                text: The text data to be inserted.
+            """
+
+            print(f"Text to be added:\n{text}")
+            print(f"Type of text: {type(text)}")
+            if self.__collection is None:
+                raise Exception("Collection is not initialized.")
+            
+            current_doc_count = self.__collection.count()
+            print(f"Number of documents in vector database is {current_doc_count}")
+            
+            # Get the next id to insert to map it to the current text to be inserted
+            next_id = str(int(current_doc_count) + 1)  # Convert to string if IDs are strings
+            print(f"ID of current text to be inserted will be {next_id}")
+
+            # Check if the next id is present in the vector database
+            existing_ids = self.__collection.get(ids=[next_id])
+            print(len(existing_ids['ids']))
+
+            # # If next_id exists, return id already exists response
+            if len(existing_ids['ids']) != 0:  
+                return Response.TEXT_ID_ALREADY_EXISTS.value
+        
+            try:
+                # Add the text to the chroma collection with the ID and it's metadata
+                print("Storing")
+                self.__collection.add(
+                    ids=[next_id],
+                    documents=[text])
+                
+                return Response.DATA_STORED_SUCCESS.value
+
+            except Exception as error:
+                print(error)
+                return Response.DATA_STORED_FAILED.value
+            
     async def store_to_vectordb(self, texts):
         number_of_inserted_chunks = 0
         for text in texts:
@@ -92,8 +122,9 @@ class DocumentService(ServiceInterface):
                 text_content = text.page_content
             else:
                 text_content = text  
-            response = await self.__vector_database.insert_text(text_content) 
+            response = await self.insert_text_to_vector_db(text_content) 
             number_of_inserted_chunks+=1
+
         return response,number_of_inserted_chunks
 
     async def run(self,file:UploadFile):
