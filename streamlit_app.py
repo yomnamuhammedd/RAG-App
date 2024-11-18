@@ -8,10 +8,7 @@ import os
 
 # Load environment variables
 load_dotenv()
-# FAST_API_URL = os.getenv('FAST_API_URL')
-# print(FAST_API_URL)
 FAST_API_URL="http://127.0.0.1:8000"
-
 
 # Function to stream chatbot responses
 def response_generator(bot_message):
@@ -49,7 +46,7 @@ if app_mode == "Upload Document":
                 data = response.json()
                 print(data)
                 st.success("Document uploaded successfully!")
-                st.write(f"Number of chunks inserted: {data['number of chunks inserted']}")
+                # st.write(f"Number of chunks inserted: {data['number of chunks inserted']}")
             else:
                 st.error("Failed to upload document.")
                 st.write("Error:", response.json().get("signal", "Unknown error"))
